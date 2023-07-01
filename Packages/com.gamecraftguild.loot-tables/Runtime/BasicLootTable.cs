@@ -6,36 +6,43 @@ namespace GameCraftGuild.LootTables {
     /// <summary>
     /// A basic loot loot table. All items have an equal chance of being selected. Items can be removed when they are selected. Duplicates are not allowed.
     /// </summary>
-    public class BasicLootTable : ILootTable {
+    public class BasicLootTable<T> : ILootTable<T> {
 
         /// <summary>
         /// All the possible loot options.
         /// </summary>
-        private HashSet<object> possibleLoot = new HashSet<object>();
+        private HashSet<T> possibleLoot = new HashSet<T>();
 
         /// <summary>
-        /// Should loot be removed from the table when it is selected.
+        /// Loot that has been removed from the loot table.
         /// </summary>
-        private bool removeLootOnDrop = false;
+        private HashSet<T> removedLoot = new HashSet<T>();
 
         /// <summary>
         /// Create a new BasicLootTable. Items have an equal chance of being selected.
         /// </summary>
-        /// <param name="removeLootOnDrop">Should loot be removed from the table when it is selected.</param>
-        public BasicLootTable (bool removeLootOnDrop = false) {
-            this.removeLootOnDrop = removeLootOnDrop;
+        public BasicLootTable () {
         }
 
         /// <summary>
         /// Get loot from the table.
         /// </summary>
+        /// <param name="removeLoot">Should the loot be removed.</param>
         /// <returns>The item or null if there is no valid item.</returns>
-        public object GetLoot () {
-            object loot = possibleLoot.ToArray().RandomFromList();
+        public T GetLoot (bool removeLoot = false) {
+            T loot = possibleLoot.ToArray().RandomFromList();
 
-            if (removeLootOnDrop) RemoveLootFromTable(loot);
+            if (removeLoot && RemoveLootFromTable(loot)) removedLoot.Add(loot); 
 
             return loot;
+        }
+
+        /// <summary>
+        /// Reset the loot table to the original state.
+        /// </summary>
+        public void ResetLootTable() {
+            possibleLoot.UnionWith(removedLoot);
+            removedLoot.Clear();
         }
 
         /// <summary>
@@ -43,7 +50,7 @@ namespace GameCraftGuild.LootTables {
         /// </summary>
         /// <param name="lootToAdd">Loot to add to the table.</param>
         /// <returns>True if <paramref name="lootToAdd" /> was added, false otherwise.</returns>
-        public bool AddLootToTable (object lootToAdd) {
+        public bool AddLootToTable (T lootToAdd) {
             return possibleLoot.Add(lootToAdd);
         }
 
@@ -52,7 +59,7 @@ namespace GameCraftGuild.LootTables {
         /// </summary>
         /// <param name="lootToRemove">Loot to remove from the table.</param>
         /// <returns>True if <paramref name="lootToRemove" /> was removed, false otherwise.</returns>
-        public bool RemoveLootFromTable (object lootToRemove) {
+        public bool RemoveLootFromTable (T lootToRemove) {
             return possibleLoot.Remove(lootToRemove);
         }
 

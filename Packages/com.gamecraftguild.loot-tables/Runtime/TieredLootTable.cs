@@ -6,26 +6,36 @@ namespace GameCraftGuild.LootTables {
     /// <summary>
     /// Loot table where there are multiple tiers, each with a different loot table.
     /// </summary>
-    public class TieredLootTables : ILootTable {
+    public class TieredLootTables<T> : ILootTable<T> {
 
         /// <summary>
         /// Dictionary of tiers mapped to their loot tables.
         /// </summary>
-        private Dictionary<string, ILootTable> possibleTiers = new Dictionary<string, ILootTable>();
+        private Dictionary<string, ILootTable<T>> possibleTiers = new Dictionary<string, ILootTable<T>>();
 
         /// <summary>
         /// Dictionary of loot tables mapped to their probabilities.
         /// </summary>
-        private Dictionary<ILootTable, int> tierProbabilities = new Dictionary<ILootTable, int>();
+        private Dictionary<ILootTable<T>, int> tierProbabilities = new Dictionary<ILootTable<T>, int>();
 
         /// <summary>
         /// Get loot from the table.
         /// </summary>
+        /// <param name="removeLoot">Should the loot be removed.</param>
         /// <returns>The item or null if there is no valid item.</returns>
-        public object GetLoot () {
-            ILootTable lootTableToUse = tierProbabilities.ToArray().RandomFromWeightedList();
+        public T GetLoot (bool removeLoot = false) {
+            ILootTable<T> lootTableToUse = tierProbabilities.ToArray().RandomFromWeightedList();
 
-            return lootTableToUse.GetLoot();
+            return lootTableToUse.GetLoot(removeLoot);
+        }
+
+        /// <summary>
+        /// Reset the loot table to the original state.
+        /// </summary>
+        public void ResetLootTable () {
+            foreach (KeyValuePair<string, ILootTable<T>> tiers in possibleTiers) {
+                tiers.Value.ResetLootTable();
+            }
         }
 
         /// <summary>
@@ -35,7 +45,7 @@ namespace GameCraftGuild.LootTables {
         /// <param name="lootTableToAdd">Loot table associated with the <paramref name="tierToAdd" />.</param>
         /// <param name="probability">Probability for the tier.</param>
         /// <returns>True if <paramref name="tierToAdd" /> is added, false otherwise.</returns>
-        public bool AddTier (string tierToAdd, ILootTable lootTableToAdd, int probability) {
+        public bool AddTier (string tierToAdd, ILootTable<T> lootTableToAdd, int probability) {
             if (possibleTiers.ContainsKey(tierToAdd)) {
                 return false;
             }
@@ -66,7 +76,7 @@ namespace GameCraftGuild.LootTables {
         /// <param name="tierToModify">Tier to modify.</param>
         /// <param name="replacementLootTable">New loot table for <paramref name="tierToModify" />.</param>
         /// <returns>True if the loot table for <paramref name="tierToModify" /> is replaced with <paramref name="replacementLootTable" />, false otherwise.</returns>
-        public bool ReplaceLootTableForTier (string tierToModify, ILootTable replacementLootTable) {
+        public bool ReplaceLootTableForTier (string tierToModify, ILootTable<T> replacementLootTable) {
             if (!possibleTiers.ContainsKey(tierToModify)) {
                 return false;
             }
@@ -97,7 +107,7 @@ namespace GameCraftGuild.LootTables {
         /// </summary>
         /// <param name="tierToGet">Tier to get the loot table for.</param>
         /// <returns>The loot table associated with <paramref name="tierToGet" />, or null if the tier doesn't exist.</returns>
-        public ILootTable GetLootTableForTier (string tierToGet) {
+        public ILootTable<T> GetLootTableForTier (string tierToGet) {
             if (!possibleTiers.ContainsKey(tierToGet)) {
                 return null;
             }

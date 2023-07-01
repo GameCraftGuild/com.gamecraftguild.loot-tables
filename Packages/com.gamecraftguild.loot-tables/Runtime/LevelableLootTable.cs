@@ -5,12 +5,13 @@ namespace GameCraftGuild.LootTables {
     /// <summary>
     /// Loot table with each level having different loot tables.
     /// </summary>
-    public class LevelableTieredLootTables : ILootTable {
+    public class LevelableLootTable<T> : ILootTable<T> {
 
         /// <summary>
         /// Dictionary mapping levels to loot tables.
         /// </summary>
-        private Dictionary<int, ILootTable> possibleLevels = new Dictionary<int, ILootTable>();
+        //private Dictionary<int, ILootTable<T>> possibleLevels = new Dictionary<int, ILootTable<T>>();
+        private ILootTable<T>[] possibleLevels;
 
         /// <summary>
         /// Current level of the loot table.
@@ -18,15 +19,42 @@ namespace GameCraftGuild.LootTables {
         private int currentLevel = 0;
 
         /// <summary>
+        /// Max level for the loot table.
+        /// </summary>
+        private int maxLevel;
+
+        /// <summary>
+        /// Create a loot table with different loot tables for different levels.
+        /// </summary>
+        /// <param name="maxLevel">Max level for the loot table.</param>
+        public LevelableLootTable(int maxLevel) {
+            this.maxLevel = maxLevel;
+            possibleLevels = new ILootTable<T>[maxLevel];
+        }
+
+        /// <summary>
         /// Get loot from the table.
         /// </summary>
-        /// <returns>The item or null if there is no valid item or there is no loot table for the current level.</returns>
-        public object GetLoot () {
-            if (!possibleLevels.ContainsKey(currentLevel)) {
-                return null;
+        /// <param name="removeLoot">Should the loot be removed.</param>
+        /// <returns>The item or default(T) if there is no valid item or there is no loot table for the current level.</returns>
+        public T GetLoot (bool removeLoot) {
+            if (possibleLevels[currentLevel] == null) {
+                return default(T);
             }
 
-            return possibleLevels[currentLevel].GetLoot();
+            return possibleLevels[currentLevel].GetLoot(removeLoot);
+        }
+
+        /// <summary>
+        /// Reset the loot table to the original state, including the level.
+        /// </summary>
+        public void ResetLootTable() {
+            ResetLevel();
+            foreach (ILootTable<T> lootTable in possibleLevels) {
+                if (lootTable != null) {
+                    lootTable.ResetLootTable();
+                }
+            }
         }
 
         /// <summary>
@@ -35,8 +63,8 @@ namespace GameCraftGuild.LootTables {
         /// <param name="levelToAdd">Level to add to the loot table.</param>
         /// <param name="lootTableToAdd">Loot table associated with the <paramref name="levelToAdd" />.</param>
         /// <returns>True if <paramref name="levelToAdd" /> is added, false otherwise.</returns>
-        public bool AddLevel (int levelToAdd, ILootTable lootTableToAdd) {
-            if (possibleLevels.ContainsKey(levelToAdd)) {
+        public bool AddLevel (int levelToAdd, ILootTable<T> lootTableToAdd) {
+            if (possibleLevels[levelToAdd] != null){
                 return false;
             }
 
@@ -50,7 +78,9 @@ namespace GameCraftGuild.LootTables {
         /// <param name="levelToRemove">Level to remove from the loot table.</param>
         /// <returns>True if <paramref name="levelToRemove" /> is removed, false otherwise.</returns>
         public bool RemoveLevel (int levelToRemove) {
-            return possibleLevels.Remove(levelToRemove);
+            bool removed = possibleLevels[levelToRemove] != null;
+            if (removed) possibleLevels[levelToRemove] = null;
+            return removed;
         }
 
         /// <summary>
@@ -59,8 +89,8 @@ namespace GameCraftGuild.LootTables {
         /// <param name="levelToModify">Level to modify.</param>
         /// <param name="replacementLootTable">New loot table for <paramref name="levelToModify" />.</param>
         /// <returns>True if the loot table for <paramref name="levelToModify" /> is replaced with <paramref name="replacementLootTable" />, false otherwise.</returns>
-        public bool ReplaceLootTableForLevel (int levelToModify, ILootTable replacementLootTable) {
-            if (!possibleLevels.ContainsKey(levelToModify)) {
+        public bool ReplaceLootTableForLevel (int levelToModify, ILootTable<T> replacementLootTable) {
+            if (possibleLevels[levelToModify] == null) {
                 return false;
             }
 
@@ -73,11 +103,7 @@ namespace GameCraftGuild.LootTables {
         /// </summary>
         /// <param name="levelToGet">Level to get the loot table for.</param>
         /// <returns>Loot table associated with <paramref name="levelToGet" /> or null if the level doesn't have a loot table.</returns>
-        public ILootTable GetLootTableForLevel (int levelToGet) {
-            if (!possibleLevels.ContainsKey(levelToGet)) {
-                return null;
-            }
-
+        public ILootTable<T> GetLootTableForLevel (int levelToGet) {
             return possibleLevels[levelToGet];
         }
 
@@ -85,7 +111,7 @@ namespace GameCraftGuild.LootTables {
         /// Get the loot table for the current level.
         /// </summary>
         /// <returns>Loot table associated with the current level or null if the level doesn't have a loot table.</returns>
-        public ILootTable GetCurrentLootTable () {
+        public ILootTable<T> GetCurrentLootTable () {
             return GetLootTableForLevel(currentLevel);
         }
 
@@ -102,22 +128,39 @@ namespace GameCraftGuild.LootTables {
         /// </summary>
         /// <returns>True if there is a loot table for the current level, false otherwise.</returns>
         public bool HasTableForCurrentLevel () {
-            return possibleLevels.ContainsKey(currentLevel) && possibleLevels[currentLevel] != null;
+            return possibleLevels[currentLevel] != null;
         }
 
         /// <summary>
-        /// Increment the current level by 1.
+        /// Increment the current level by 1 if the current level is less than the max level.
         /// </summary>
-        public void AdvanceLevel () {
-            currentLevel++;
+        /// <returns>True if the level was advanced and false otherwise.</returns>
+        public bool AdvanceLevel () {
+            if (currentLevel < maxLevel) {
+                currentLevel++;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
         /// Set the current level to a given level.
         /// </summary>
         /// <param name="newLevel">Level to set the current level to.</param>
-        public void SetLevel (int newLevel) {
-            currentLevel = newLevel;
+        /// <returns>True if the level was set to the new level, false otherwise.</returns>
+        public bool SetLevel (int newLevel) {
+            if (newLevel <= maxLevel) {
+                currentLevel = newLevel;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Set the current level to 0;
+        /// </summary>
+        public void ResetLevel () {
+            currentLevel = 0;
         }
 
     }
