@@ -1,3 +1,4 @@
+using GameCraftGuild.UnityExtensions.IList;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -24,7 +25,7 @@ namespace GameCraftGuild.LootTables {
         /// <param name="removeLoot">Should the loot be removed.</param>
         /// <returns>The item or null if there is no valid item.</returns>
         public T GetLoot (bool removeLoot = false) {
-            ILootTable<T> lootTableToUse = tierProbabilities.ToArray().RandomFromWeightedList();
+            ILootTable<T> lootTableToUse = tierProbabilities.Keys.ToArray().GetRandomItemWeighted(tierProbabilities.Values.ToArray());
 
             return lootTableToUse.GetLoot(removeLoot);
         }

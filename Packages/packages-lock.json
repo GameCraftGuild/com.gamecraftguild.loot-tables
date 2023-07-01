@@ -4,7 +4,16 @@
       "version": "file:com.gamecraftguild.loot-tables",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.gamecraftguild.unity-extensions": "0.1.0-preview"
+      }
+    },
+    "com.gamecraftguild.unity-extensions": {
+      "version": "0.1.0-preview",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://package.openupm.com"
     },
     "com.unity.ext.nunit": {
       "version": "1.0.6",

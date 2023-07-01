@@ -12,6 +12,9 @@
     "gamecraft",
     "gamecraftguild"
   ],
+  "dependencies": {
+    "com.gamecraftguild.unity-extensions": "0.1.0-preview"
+  },
   "author": {
     "name": "GameCraft Guild",
     "email": "gamecraftguild@gmail.com",

@@ -1,11 +1,13 @@
 {
     "name": "GameCraftGuild.LootTables",
     "rootNamespace": "GameCraftGuild.LootTables",
-    "references": [],
+    "references": [
+        "GUID:27e66e4d178baa14e8e2717d66c83da3"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
+    "overrideReferences": true,
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using GameCraftGuild.UnityExtensions.IList;
 
 namespace GameCraftGuild.LootTables {
 
@@ -30,8 +31,7 @@ namespace GameCraftGuild.LootTables {
         /// <param name="removeLoot">Should the loot be removed.</param>
         /// <returns>The item or null if there is no valid item.</returns>
         public T GetLoot (bool removeLoot = false) {
-            T loot = possibleLoot.ToArray().RandomFromWeightedList();
-
+            T loot = possibleLoot.Keys.ToArray().GetRandomItemWeighted(possibleLoot.Values.ToArray());
             if (removeLoot) {
                 possibleLoot[loot] -= 1;
                 if (!removedLoot.ContainsKey(loot)) {
